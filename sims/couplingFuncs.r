@@ -470,6 +470,25 @@ xtractLD <- function(data, setname, folder, path= '/media/schimar/FLAXMAN/h5/', 
 	return(runs)
 }		
 
+xtractFst <- function(data, setname, folder, path= '/media/schimar/FLAXMAN/h5/', maf= 25e-4, ...) {
+	# function to read individual runs (from vector of runs), calculate CC and create new list (of length(data)) that contains phiObs and kphismax
+	#
+	runs <- list()
+	#kphisMax <- list()
+	for (i in 1:dim(data)[1]){
+		run <- data$run[i]
+		path5 <- paste('/runs/', run, sep= '')
+		#
+		ccObjTmp <- readCCobj(run, setname, path)
+		ccTmp <- ccStats.3(run= run, df= df, ccObj= ccObjTmp, maf= maf)
+
+		runs[[i]] <- ccTmp		 
+		names(runs)[i] <- run
+
+	}
+	return(runs)
+}		
+
 
 
 
