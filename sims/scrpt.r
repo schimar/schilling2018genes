@@ -72,7 +72,7 @@ sAfst <- xtractFst(sAsym, setname= 'sM', folder= 'sM', path= paths)
 
 cols <- c("#c7485a", "#237fa9", "#4a921e")
 
-
+# for each of the 6 sets (A-F), run the 
 fobj <- sAfst
 
 sels <- list()
