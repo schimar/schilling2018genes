@@ -117,24 +117,24 @@ calcMeanS <- function(sSel, gen, mutDist, sConst) {
 
 
 
-readCCobj <- function(run, smParam, path, ...) {
+readCCobj <- function(run, path = '.', ...) {
 	# function to read a single data set (as input for ccStats)
 	path5 <- paste('/runs/', run, sep= '')
-	fstTmp <- as.data.frame(h5read(paste(path, smParam, '/Fst_', smParam, 'T.h5', sep= ''), name= path5)[[1]])
+	fstTmp <- as.data.frame(h5read(paste(path, '/fst_AFt.h5', sep= ''), name= path5)[[1]])
 	H5close()
-	aftsTmp <- as.data.frame(h5read(paste(path, smParam, '/afts_', smParam, 'T.h5', sep= ''), name= path5)[[1]])
+	aftsTmp <- as.data.frame(h5read(paste(path, '/afts_AFt.h5', sep= ''), name= path5)[[1]])
 	colnames(fstTmp) <- c("nGen", "locusID", "Fst", "allele_frequencies", "S_MAX1", "S_MAX0", "chromosomeMembership", "MAP", "locType")
 	colnames(aftsTmp) <- c("nGen", "locusID", "AFpatch0", "AFpatch1", "is_reversed_locus", "locType", "AF", "AFdiff")
 	H5close()
 	#
-	LDselTmp <- h5read(paste(path, smParam, '/LDselAvg_', smParam, 'T.h5', sep= ''), name= path5)[[1]]
+	LDselTmp <- h5read(paste(path, '/LDselAvg_AFt.h5', sep= ''), name= path5)[[1]]
 	H5close()
-	LDneuTmp <- h5read(paste(path, smParam, '/LDneutAvg_', smParam, 'T.h5', sep= ''), name= path5)[[1]]
+	LDneuTmp <- h5read(paste(path, '/LDneutAvg_AFt.h5', sep= ''), name= path5)[[1]]
 	H5close()
-	effMig <- h5read(paste(path, smParam, '/effMig_', smParam, 'T.h5', sep= ''), name= path5)[[1]]
+	effMig <- h5read(paste(path, '/effMig_AFt.h5', sep= ''), name= path5)[[1]]
 	colnames(effMig) <- c("nGen", "eme0", "eme1", "nVariableLoci", "nRes", "nImm", paste('V', seq(7, 26,1)))
 	H5close()
-	dXY <- h5read(paste(path, smParam, '/dXY_', smParam, 'T.h5', sep= ''), name= path5)[[1]]
+	dXY <- h5read(paste(path, '/dXY_AFt.h5', sep= ''), name= path5)[[1]]
 	colnames(dXY) <- c('nGen', 'dXY', 'deme0', 'deme1')
 	H5close()
 	#
@@ -218,8 +218,8 @@ ccStats.3 <- function(run, df, ccObj, maf= 25e-4, nChrom= 4) {    #fst, afts, LD
 	maxEffMigMeanS <- calcMaxEffMig(meanS, m, unlist(lapply(fstSpl, length)))[[2]]
 	gwcTimeMeanS <- calcGWCtime(effMig, maxEffMigMeanS, params$end_period_allopatry)
 ##### output
-	out <- list(FSTs, LDsell, LDneutl, afDiff_s, afDiff_n, avgAFdiff, PHIs$sMax, PHIs$kphiSmax, pHatsMax, cWsMax, PHIs$phiObs, PHIs$sBar, pHatsBar, cWsBar, meanS, sStarLeS, m, effMig, unlist(maxEffMigSbar), gwcTimeSbar, unlist(maxEffMigMeanS), gwcTimeMeanS, clineWallS, pBarAllS, nLoci, maf, recomb, PHIs$kphiMeanS, PHIs$phiBarMeanS, PHIs$phiBarsMax)
-	names(out) <- c('FSTs', 'LDsel', 'LDneut', 'afDiffS', 'afDiffN', 'avgAFdiffs', 'sMax', 'kphisMax', 'pHatsMax', 'cWsMax', 'phiObs', 'sBar', 'pHatsBar', 'cWsBar', 'meanS', 'sStarLeS', 'sd_move', 'effMig', 'maxEffMigSbar', 'gwcTimeSbar', 'maxEffMigMeanS', 'gwcTimeMeanS', 'cWallS', 'pBarAllS', 'nLoci', 'maf', 'recomb', 'kphiMeanS', 'phiBarMeanS', 'phiBarsMax')
+	out <- list(FSTs, LDsell, LDneutl, afDiff_s, afDiff_n, avgAFdiff, pHatsBar, cWsBar, meanS, sStarLeS, m, effMig, unlist(maxEffMigSbar), gwcTimeSbar, unlist(maxEffMigMeanS), gwcTimeMeanS, clineWallS, pBarAllS, nLoci, maf, recomb, PHIs$kphiMeanS, PHIs$phiBarMeanS, PHIs$phiBarsMax)
+	names(out) <- c('FSTs', 'LDsel', 'LDneut', 'afDiffS', 'afDiffN', 'avgAFdiffs', 'pHatsBar', 'cWsBar', 'meanS', 'sStarLeS', 'sd_move', 'effMig', 'maxEffMigSbar', 'gwcTimeSbar', 'maxEffMigMeanS', 'gwcTimeMeanS', 'cWallS', 'pBarAllS', 'nLoci', 'maf', 'recomb', 'kphiMeanS', 'phiBarMeanS', 'phiBarsMax')
 	return(out)
 }
 
@@ -388,7 +388,7 @@ calcPHIs.3 <- function(aftsSpl, fstSpl, maf= 25e-4, mapL= 100, nChrom= 4, meanS=
 }
 
 
-xtractPhis <- function(data, setname, folder, path= '/media/schimar/FLAXMAN/h5/', maf= 25e-4, ...) {
+xtractPhis <- function(data, folder= '.', path= '.', maf= 25e-4, ...) {
 	# function to read individual runs (from vector of runs), calculate CC and create new list (of length(data)) that contains phiObs and kphismax
 	#
 	runs <- list()
@@ -397,7 +397,7 @@ xtractPhis <- function(data, setname, folder, path= '/media/schimar/FLAXMAN/h5/'
 		run <- data$run[i]
 		path5 <- paste('/runs/', run, sep= '')
 		#
-		ccObjTmp <- readCCobj(run, setname, path)
+		ccObjTmp <- readCCobj(run, path)
 		#ccTmp <- ccStats.2(data, ccObjTmp$fst, ccObjTmp$afts, ccObjTmp$LDsel, ccObjTmp$LDneut, ccObjTmp$effMig, run, maf= maf)
 		ccTmp <- ccStats.3(run= run, df= df, ccObj= ccObjTmp, maf= maf)
 		#ccTmp <- ccStats.2slim(run= run, df= df, ccObj= ccObjTmp, maf= maf)
@@ -405,9 +405,9 @@ xtractPhis <- function(data, setname, folder, path= '/media/schimar/FLAXMAN/h5/'
 		avgAFdiffS <- unlist(lapply(lapply(ccTmp$afDiffS, abs), mean))
 		avgAFdiffN <- unlist(lapply(lapply(ccTmp$afDiffN, abs), mean))
 		cWallS <- lapply(ccTmp$cWallS, unlist)
-		runs[[i]] <- list(ccTmp$phiObs, ccTmp$kphisMax, ccTmp$pHatsMax, avgAFdiffS, avgAFdiffN, cWallS, ccTmp$pBarAllS, ccTmp$sStarLeS$Le, ccTmp$kphiMeanS, ccTmp$phiBarMeanS)   # 
+		runs[[i]] <- list(avgAFdiffS, avgAFdiffN, cWallS, ccTmp$pBarAllS, ccTmp$sStarLeS$Le, ccTmp$kphiMeanS, ccTmp$phiBarMeanS)   # 
 		names(runs)[i] <- run
-		names(runs[[i]]) <- c('phiObs', 'kphisMax', 'pHatsMax', 'afDiffS', 'afDiffN', 'cWallS', 'pBarAllS', 'Le', 'kphiMeanS', 'phiBarMeanS')
+		names(runs[[i]]) <- c('afDiffS', 'afDiffN', 'cWallS', 'pBarAllS', 'Le', 'kphiMeanS', 'phiBarMeanS')
 		#phiObs[[i]] <- ccTmp$phiObs
 		#names(phiObs)[i] <- run
 		#kphisMax[[i]] <- ccTmp$kphisMax
@@ -421,30 +421,30 @@ xtractPhis <- function(data, setname, folder, path= '/media/schimar/FLAXMAN/h5/'
 
 
 
-xtractLe <- function(data, setname, folder, path= '/media/schimar/FLAXMAN/h5/', maf= 25e-4, ...) {
-	# function to read individual runs (from vector of runs), calculate CC and create new list (of length(data)) that contains effMig, Le and gwcTime  
-	#
-	runs <- list()
-	#kphisMax <- list()
-	for (i in 1:dim(data)[1]){
-		run <- data$run[i]
-		path5 <- paste('/runs/', run, sep= '')
-		#
-		ccObjTmp <- readCCobjRude(run, setname, folder, path)
-		#ccTmp <- ccStats.2(data, ccObjTmp$fst, ccObjTmp$afts, ccObjTmp$LDsel, ccObjTmp$LDneut, ccObjTmp$effMig, run, maf= maf)
-		ccTmp <- ccStats.3(run= run, df= df, ccObj= ccObjTmp, maf= maf)
-		runs[[i]] <- list(ccTmp$sStarLeS, ccTmp$effMig, ccTmp$maxEffMigMeanS, ccTmp$gwcTimeMeanS, data$ts_sampling_frequency[i])   # 
-		names(runs)[i] <- run
-		names(runs[[i]]) <- c('sStarLeS', 'effMig', 'maxEffMigMeanS', 'tsFreq')
-		#phiObs[[i]] <- ccTmp$phiObs
-		#names(phiObs)[i] <- run
-		#kphisMax[[i]] <- ccTmp$kphisMax
-		#names(kphisMax)[i] <- run
-	}
-	#out <- list(phiObs, kphisMax)
-	#names(out) <- c('phiObs', 'kphisMax')
-	return(runs)
-}		
+#xtractLe <- function(data, setname, folder, path= '/media/schimar/FLAXMAN/h5/', maf= 25e-4, ...) {
+#	# function to read individual runs (from vector of runs), calculate CC and create new list (of length(data)) that contains effMig, Le and gwcTime  
+#	#
+#	runs <- list()
+#	#kphisMax <- list()
+#	for (i in 1:dim(data)[1]){
+#		run <- data$run[i]
+#		path5 <- paste('/runs/', run, sep= '')
+#		#
+#		ccObjTmp <- readCCobj(run, setname, folder, path)
+#		#ccTmp <- ccStats.2(data, ccObjTmp$fst, ccObjTmp$afts, ccObjTmp$LDsel, ccObjTmp$LDneut, ccObjTmp$effMig, run, maf= maf)
+#		ccTmp <- ccStats.3(run= run, df= df, ccObj= ccObjTmp, maf= maf)
+#		runs[[i]] <- list(ccTmp$sStarLeS, ccTmp$effMig, ccTmp$maxEffMigMeanS, ccTmp$gwcTimeMeanS, data$ts_sampling_frequency[i])   # 
+#		names(runs)[i] <- run
+#		names(runs[[i]]) <- c('sStarLeS', 'effMig', 'maxEffMigMeanS', 'tsFreq')
+#		#phiObs[[i]] <- ccTmp$phiObs
+#		#names(phiObs)[i] <- run
+#		#kphisMax[[i]] <- ccTmp$kphisMax
+#		#names(kphisMax)[i] <- run
+#	}
+#	#out <- list(phiObs, kphisMax)
+#	#names(out) <- c('phiObs', 'kphisMax')
+#	return(runs)
+#}		
 
 
 xtractLD <- function(data, setname, folder, path= '/media/schimar/FLAXMAN/h5/', maf= 25e-4, ...) {
@@ -456,7 +456,7 @@ xtractLD <- function(data, setname, folder, path= '/media/schimar/FLAXMAN/h5/', 
 		run <- data$run[i]
 		path5 <- paste('/runs/', run, sep= '')
 		#
-		ccObjTmp <- readCCobjRude(run, setname, folder, path)
+		ccObjTmp <- readCCobj(run, setname, folder, path)
 		#ccTmp <- ccStats.2(data, ccObjTmp$fst, ccObjTmp$afts, ccObjTmp$LDsel, ccObjTmp$LDneut, ccObjTmp$effMig, run, maf= maf)
 		#ccTmp <- ccStats.2(run= run, df= df, ccObj= ccObjTmp, maf= maf)
 		#
@@ -470,7 +470,7 @@ xtractLD <- function(data, setname, folder, path= '/media/schimar/FLAXMAN/h5/', 
 	return(runs)
 }		
 
-xtractFst <- function(data, setname, folder, path= '/media/schimar/FLAXMAN/h5/', maf= 25e-4, ...) {
+xtractFst <- function(data, folder= '.', path= '.', maf= 25e-4, ...) {
 	# function to read individual runs (from vector of runs), calculate CC and create new list (of length(data)) that contains phiObs and kphismax
 	#
 	runs <- list()
@@ -479,7 +479,7 @@ xtractFst <- function(data, setname, folder, path= '/media/schimar/FLAXMAN/h5/',
 		run <- data$run[i]
 		path5 <- paste('/runs/', run, sep= '')
 		#
-		ccObjTmp <- readCCobj(run, setname, path)
+		ccObjTmp <- readCCobj(run, path)
 		ccTmp <- ccStats.3(run= run, df= df, ccObj= ccObjTmp, maf= maf)
 
 		runs[[i]] <- ccTmp		 
