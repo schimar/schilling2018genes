@@ -218,8 +218,8 @@ ccStats.3 <- function(run, df, ccObj, maf= 25e-4, nChrom= 4) {    #fst, afts, LD
 	maxEffMigMeanS <- calcMaxEffMig(meanS, m, unlist(lapply(fstSpl, length)))[[2]]
 	gwcTimeMeanS <- calcGWCtime(effMig, maxEffMigMeanS, params$end_period_allopatry)
 ##### output
-	out <- list(FSTs, LDsell, LDneutl, afDiff_s, afDiff_n, avgAFdiff, pHatsBar, cWsBar, meanS, sStarLeS, m, effMig, unlist(maxEffMigSbar), gwcTimeSbar, unlist(maxEffMigMeanS), gwcTimeMeanS, clineWallS, pBarAllS, nLoci, maf, recomb, PHIs$kphiMeanS, PHIs$phiBarMeanS, PHIs$phiBarsMax)
-	names(out) <- c('FSTs', 'LDsel', 'LDneut', 'afDiffS', 'afDiffN', 'avgAFdiffs', 'pHatsBar', 'cWsBar', 'meanS', 'sStarLeS', 'sd_move', 'effMig', 'maxEffMigSbar', 'gwcTimeSbar', 'maxEffMigMeanS', 'gwcTimeMeanS', 'cWallS', 'pBarAllS', 'nLoci', 'maf', 'recomb', 'kphiMeanS', 'phiBarMeanS', 'phiBarsMax')
+	out <- list(FSTs, LDsell, LDneutl, afDiff_s, afDiff_n, avgAFdiff, pHatsBar, cWsBar, meanS, sStarLeS, m, effMig, unlist(maxEffMigSbar), gwcTimeSbar, unlist(maxEffMigMeanS), gwcTimeMeanS, clineWallS, pBarAllS, nLoci, maf, recomb, PHIs$kphiMeanS, PHIs$thetaMeanS)
+	names(out) <- c('FSTs', 'LDsel', 'LDneut', 'afDiffS', 'afDiffN', 'avgAFdiffs', 'pHatsBar', 'cWsBar', 'meanS', 'sStarLeS', 'sd_move', 'effMig', 'maxEffMigSbar', 'gwcTimeSbar', 'maxEffMigMeanS', 'gwcTimeMeanS', 'cWallS', 'pBarAllS', 'nLoci', 'maf', 'recomb', 'kphiMeanS', 'thetaMeanS')
 	return(out)
 }
 
@@ -377,13 +377,13 @@ calcPHIs.3 <- function(aftsSpl, fstSpl, maf= 25e-4, mapL= 100, nChrom= 4, meanS=
 	sBar <- (phiObs / unlist(nLociS)) * recomb
 
 	# Barton's phi w/ meanS
-	phiBarMeanS <- meanS / recomb
+	thetaMeanS <- meanS / recomb
 	# Barton's phi w/ sMax
 	phiBarsMax <- sMax / recomb
 
 	#
-	out <- list(sMax, kphiMeanS, kphiSmax, phiObs, sBar, nLociS, nLoci, recomb, phiBarMeanS, phiBarsMax)
-	names(out) <- c('sMax', 'kphiMeans', 'kphiSmax', 'phiObs', 'sBar', 'nLociS', 'nLoci', 'recomb', 'phiBarMeanS', 'phiBarsMax')
+	out <- list(sMax, kphiMeanS, kphiSmax, phiObs, sBar, nLociS, nLoci, recomb, thetaMeanS, phiBarsMax)
+	names(out) <- c('sMax', 'kphiMeans', 'kphiSmax', 'phiObs', 'sBar', 'nLociS', 'nLoci', 'recomb', 'thetaMeanS', 'phiBarsMax')
 	return(out)
 }
 
@@ -392,22 +392,19 @@ xtractPhis <- function(data, folder= '.', path= '.', maf= 25e-4, ...) {
 	# function to read individual runs (from vector of runs), calculate CC and create new list (of length(data)) that contains phiObs and kphismax
 	#
 	runs <- list()
-	#kphisMax <- list()
 	for (i in 1:dim(data)[1]){
 		run <- data$run[i]
 		path5 <- paste('/runs/', run, sep= '')
 		#
 		ccObjTmp <- readCCobj(run, path)
-		#ccTmp <- ccStats.2(data, ccObjTmp$fst, ccObjTmp$afts, ccObjTmp$LDsel, ccObjTmp$LDneut, ccObjTmp$effMig, run, maf= maf)
 		ccTmp <- ccStats.3(run= run, df= df, ccObj= ccObjTmp, maf= maf)
-		#ccTmp <- ccStats.2slim(run= run, df= df, ccObj= ccObjTmp, maf= maf)
 		#
 		avgAFdiffS <- unlist(lapply(lapply(ccTmp$afDiffS, abs), mean))
 		avgAFdiffN <- unlist(lapply(lapply(ccTmp$afDiffN, abs), mean))
 		cWallS <- lapply(ccTmp$cWallS, unlist)
-		runs[[i]] <- list(avgAFdiffS, avgAFdiffN, cWallS, ccTmp$pBarAllS, ccTmp$sStarLeS$Le, ccTmp$kphiMeanS, ccTmp$phiBarMeanS)   # 
+		runs[[i]] <- list(avgAFdiffS, avgAFdiffN, cWallS, ccTmp$pBarAllS, ccTmp$sStarLeS$Le, ccTmp$kphiMeanS, ccTmp$thetaMeanS) 
 		names(runs)[i] <- run
-		names(runs[[i]]) <- c('afDiffS', 'afDiffN', 'cWallS', 'pBarAllS', 'Le', 'kphiMeanS', 'phiBarMeanS')
+		names(runs[[i]]) <- c('afDiffS', 'afDiffN', 'cWallS', 'pBarAllS', 'Le', 'kphiMeanS', 'thetaMeanS')
 		#phiObs[[i]] <- ccTmp$phiObs
 		#names(phiObs)[i] <- run
 		#kphisMax[[i]] <- ccTmp$kphisMax
@@ -417,34 +414,6 @@ xtractPhis <- function(data, folder= '.', path= '.', maf= 25e-4, ...) {
 	#names(out) <- c('phiObs', 'kphisMax')
 	return(runs)
 }		
-
-
-
-
-#xtractLe <- function(data, setname, folder, path= '/media/schimar/FLAXMAN/h5/', maf= 25e-4, ...) {
-#	# function to read individual runs (from vector of runs), calculate CC and create new list (of length(data)) that contains effMig, Le and gwcTime  
-#	#
-#	runs <- list()
-#	#kphisMax <- list()
-#	for (i in 1:dim(data)[1]){
-#		run <- data$run[i]
-#		path5 <- paste('/runs/', run, sep= '')
-#		#
-#		ccObjTmp <- readCCobj(run, setname, folder, path)
-#		#ccTmp <- ccStats.2(data, ccObjTmp$fst, ccObjTmp$afts, ccObjTmp$LDsel, ccObjTmp$LDneut, ccObjTmp$effMig, run, maf= maf)
-#		ccTmp <- ccStats.3(run= run, df= df, ccObj= ccObjTmp, maf= maf)
-#		runs[[i]] <- list(ccTmp$sStarLeS, ccTmp$effMig, ccTmp$maxEffMigMeanS, ccTmp$gwcTimeMeanS, data$ts_sampling_frequency[i])   # 
-#		names(runs)[i] <- run
-#		names(runs[[i]]) <- c('sStarLeS', 'effMig', 'maxEffMigMeanS', 'tsFreq')
-#		#phiObs[[i]] <- ccTmp$phiObs
-#		#names(phiObs)[i] <- run
-#		#kphisMax[[i]] <- ccTmp$kphisMax
-#		#names(kphisMax)[i] <- run
-#	}
-#	#out <- list(phiObs, kphisMax)
-#	#names(out) <- c('phiObs', 'kphisMax')
-#	return(runs)
-#}		
 
 
 xtractLD <- function(data, setname, folder, path= '/media/schimar/FLAXMAN/h5/', maf= 25e-4, ...) {
