@@ -134,12 +134,12 @@ readCCobj <- function(run, path = '.', ...) {
 	effMig <- h5read(paste(path, '/effMig_AFt.h5', sep= ''), name= path5)[[1]]
 	colnames(effMig) <- c("nGen", "eme0", "eme1", "nVariableLoci", "nRes", "nImm", paste('V', seq(7, 26,1)))
 	H5close()
-	dXY <- h5read(paste(path, '/dXY_AFt.h5', sep= ''), name= path5)[[1]]
-	colnames(dXY) <- c('nGen', 'dXY', 'deme0', 'deme1')
+	#dXY <- h5read(paste(path, '/dXY_AFt.h5', sep= ''), name= path5)[[1]]
+	#colnames(dXY) <- c('nGen', 'dXY', 'deme0', 'deme1')
 	H5close()
 	#
-	out <- list(fstTmp, aftsTmp, LDselTmp, LDneuTmp, effMig, dXY)
-	names(out) <- c('fst', 'afts', 'LDsel', 'LDneut', 'effMig', 'dXY')
+	out <- list(fstTmp, aftsTmp, LDselTmp, LDneuTmp, effMig)	#, dXY)
+	names(out) <- c('fst', 'afts', 'LDsel', 'LDneut', 'effMig')	#, 'dXY')
 	return(out)
 }
 
@@ -429,10 +429,10 @@ xtractLD <- function(data, setname, folder, path= '/media/schimar/FLAXMAN/h5/', 
 		#ccTmp <- ccStats.2(data, ccObjTmp$fst, ccObjTmp$afts, ccObjTmp$LDsel, ccObjTmp$LDneut, ccObjTmp$effMig, run, maf= maf)
 		#ccTmp <- ccStats.2(run= run, df= df, ccObj= ccObjTmp, maf= maf)
 		#
-		runs[[i]] <- list(ccObjTmp$LDneut, ccObjTmp$LDsel, ccObjTmp$dXY)   # 
+		runs[[i]] <- list(ccObjTmp$LDneut, ccObjTmp$LDsel)	#, ccObjTmp$dXY)   
 
 		names(runs)[i] <- run
-		names(runs[[i]]) <- c('LDneut', 'LDsel', 'dXY')
+		names(runs[[i]]) <- c('LDneut', 'LDsel')	#, 'dXY')
 	}
 	#out <- list(phiObs, kphisMax)
 	#names(out) <- c('phiObs', 'kphisMax')
