@@ -130,8 +130,8 @@ fitlsTheta <- list()
 	parS <- coef(fitS)
 	parN <- coef(fitN)
 	
-	ys2 <- sigmoid(parS, x)
-	yn2 <- sigmoid(parN, x)
+	#ys2 <- sigmoid(parS, x)
+	#yn2 <- sigmoid(parN, x)
 
 sTimeHighestSlope <- c(-0.6311687, -0.6861583, -0.6405026, 1.5250583, -0.2157905, -0.2408711)
 nTimeHighestSlope <- c(0.01410054, 0.33841506, 0.85201709, 86.25805769, 0.36454080, 0.74927278)
@@ -210,63 +210,63 @@ fitld <- list()
 #}
 
 
-#ldsHighSlope <- c(81.12, 16.927, 28.774, NA, 161.3, 37.05)
-#ldnHighSlope <- c(231.6, 80.5, 166, NA, 234.6, 90.6)
-#
-#
-#
-#
-#
-#pdf('figs/LDblack_ablne.pdf', width= 16, height= 9)
-#
-#par(mfrow= c(2,3))	#, mar= c(5,4,4,8) + 0.1)
-#
-#for(i in 1:length(ldls)){
-#	ldObj <- ldls[[i]]
-#	ldsels <- list()
-#	ldneuts <- list()
-#	for(j in 1:length(ldObj)){
-#		ldsels[[j]] <- ldObj[[j]]$LDsel[,4]
-#		ldneuts[[j]] <- ldObj[[j]]$LDneut[,4]
-#	}
-#	
-#	ldDFs <- as.data.frame(ldsels)
-#	ldDFs <- t(ldDFs)
-#	ldDFn <- as.data.frame(ldneuts)
-#	ldDFn <- t(ldDFn)
-#	
-#	sMed <- apply(ldDFs, 1, median, na.rm= T)
-#	nMed <- apply(ldDFn, 1, median, na.rm= T)
-#	qUps <- apply(ldDFs, 1, quantile, prob= 0.95, type= 8, na.rm= T)
-#	qUpn <- apply(ldDFn, 1, quantile, prob= 0.95, type= 8, na.rm= T)
-#	qLos <- apply(ldDFs, 1, quantile, prob= 0.05, type= 8, na.rm= T)
-#	qLon <- apply(ldDFn, 1, quantile, prob= 0.05, type= 8, na.rm= T)
-#	xaxs <- list(c(0, 200, 400, 600), c(0, 50, 100, 150), c(0, 10, 20, 30, 40, 50), c(0, 500, 1000, 1500), c(0, 100, 200, 300, 400), c(0, 20, 40, 60, 80))
-#
-#	xax  <- xaxs[[i]]*1000/tsFreq[i]	
-#	xLab <- expression(paste("generations (x 10" ^"3)"))		#, tsFreq[i], ')')
-#	#else{
-#
-#	#
-#	plot(x= 1:length(sMed), type= 'n', cex.axis= 1.4, cex.lab= 1.8, xlab= xLab, ylab= 'LD', xlim= c(0, length(sMed)), ylim= c(0,1), axes= F)
-#	abline(v= ldsHighSlope[i], col= 'grey70', lwd= 1.3)
-#	abline(v= ldnHighSlope[i], col= 'grey70', lwd= 1.3)
-#
-#	axis(1, at= xax, labels= xaxs[[i]], cex.axis= 1.4)
-#	axis(2, at= c(0, 0.5, 1.0), cex.axis= 1.4)
-#
-#	# nGen[i]/tsFreq[i]
-#	lines(qUps, lty= 1, cex= 1.2, col= 'grey50')
-#	lines(qLos, lty= 1, cex= 1.2, col= 'grey50')	#cols[1])
-#	
-#	lines(qUpn, lty= 1, cex= 1.2, col= 'grey50')	#cols[1])
-#	lines(qLon, lty= 1, cex= 1.2, col= 'grey50')	#cols[1])
-#	lines(sMed, lty= 1, cex= 1.2)	#, col= cols[1])
-#	lines(nMed, lty= 1, cex= 1.2)	#, col= cols[2])
-#	box()
-#	}
-#
-#dev.off()
+ldsHighSlope <- c(81.12, 16.927, 28.774, NA, 161.3, 37.05)
+ldnHighSlope <- c(231.6, 80.5, 166, NA, 234.6, 90.6)
+
+
+
+
+
+pdf('figs/LDblack_ablne.pdf', width= 16, height= 9)
+
+par(mfrow= c(2,3))	#, mar= c(5,4,4,8) + 0.1)
+
+for(i in 1:length(ldls)){
+	ldObj <- ldls[[i]]
+	ldsels <- list()
+	ldneuts <- list()
+	for(j in 1:length(ldObj)){
+		ldsels[[j]] <- ldObj[[j]]$LDsel[,4]
+		ldneuts[[j]] <- ldObj[[j]]$LDneut[,4]
+	}
+	
+	ldDFs <- as.data.frame(ldsels)
+	ldDFs <- t(ldDFs)
+	ldDFn <- as.data.frame(ldneuts)
+	ldDFn <- t(ldDFn)
+	
+	sMed <- apply(ldDFs, 1, median, na.rm= T)
+	nMed <- apply(ldDFn, 1, median, na.rm= T)
+	qUps <- apply(ldDFs, 1, quantile, prob= 0.95, type= 8, na.rm= T)
+	qUpn <- apply(ldDFn, 1, quantile, prob= 0.95, type= 8, na.rm= T)
+	qLos <- apply(ldDFs, 1, quantile, prob= 0.05, type= 8, na.rm= T)
+	qLon <- apply(ldDFn, 1, quantile, prob= 0.05, type= 8, na.rm= T)
+	xaxs <- list(c(0, 200, 400, 600), c(0, 50, 100, 150), c(0, 10, 20, 30, 40, 50), c(0, 500, 1000, 1500), c(0, 100, 200, 300, 400), c(0, 20, 40, 60, 80))
+
+	xax  <- xaxs[[i]]*1000/tsFreq[i]	
+	xLab <- expression(paste("generations (x 10" ^"3)"))		#, tsFreq[i], ')')
+	#else{
+
+	#
+	plot(x= 1:length(sMed), type= 'n', cex.axis= 1.4, cex.lab= 1.8, xlab= xLab, ylab= 'LD', xlim= c(0, length(sMed)), ylim= c(0,1), axes= F)
+	abline(v= ldsHighSlope[i], col= 'grey70', lwd= 1.3)
+	abline(v= ldnHighSlope[i], col= 'grey70', lwd= 1.3)
+
+	axis(1, at= xax, labels= xaxs[[i]], cex.axis= 1.4)
+	axis(2, at= c(0, 0.5, 1.0), cex.axis= 1.4)
+
+	# nGen[i]/tsFreq[i]
+	lines(qUps, lty= 1, cex= 1.2, col= 'grey50')
+	lines(qLos, lty= 1, cex= 1.2, col= 'grey50')	#cols[1])
+	
+	lines(qUpn, lty= 1, cex= 1.2, col= 'grey50')	#cols[1])
+	lines(qLon, lty= 1, cex= 1.2, col= 'grey50')	#cols[1])
+	lines(sMed, lty= 1, cex= 1.2)	#, col= cols[1])
+	lines(nMed, lty= 1, cex= 1.2)	#, col= cols[2])
+	box()
+	}
+
+dev.off()
 
 
 
