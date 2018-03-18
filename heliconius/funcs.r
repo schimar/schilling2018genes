@@ -271,6 +271,55 @@ getQr_allChrSub <- function(chrls, pQls, pops, tChr = 2, subN= 5000){
 	return(LDlist)
 }
 
+getQrStats <- function(QldObj, stat){
+	chromnum <- c(2,7,10,18,21)
+	chromnames <- paste0('chrom', chromnum)
+	rowNom <- names(QldObj[[1]][[1]])
+	specNom <- names(QldObj[[1]])
+	colNom <- paste0(specNom, c(2,2,7,7,10,10,18,18,21,21))
+	
+	outDF <- matrix(nrow= 6, ncol= 10, dimnames= list(rowNom, colNom))
+	for(i in 1:length(QldObj)){
+		#chromX <- which(chromnum == chrom)
+		j <- i*2
+		obj1 <- lapply(QldObj[[i]][[1]], log)
+		obj2 <- lapply(QldObj[[i]][[2]], log)
+		outDF[,j-1] <- unlist(lapply(obj1, stat))
+		outDF[,j] <- unlist(lapply(obj2, stat))		
+	}
+	return(outDF)
+}
+
+
+plotDensCurve <- function(dat, spec, fname){
+	lenR2 <- length(dat[[spec]]$LDmat)
+	cols <- c("#c7485a", "#237fa9", "#4a921e")
+	c1 <- c(rep('x', lenR2), rep('y', lenR2), rep('z', lenR2))
+	c2 <- log(c(dat[[spec]]$LDmat, dat[[spec]]$LDmatN, dat[[spec]]$mSN))
+	dfdat <- data.frame(sites= c1, logR2= c2)	
+	myplot <- ggplot(dfdat, aes(logR2, colour=sites)) + coord_cartesian(xlim= c(-8, 0), ylim= c(0, 0.45)) + geom_density(alpha= 0.2, show.legend= F, adjust= 1, size= 1.1)  + theme_minimal(base_size= 20) + scale_color_manual(values= c(x= cols[1], y= cols[2], z= cols[3]))
+	#
+	ggsave(myplot, filename= fname, width= 7, height= 7)
+}
+
+plotDensCurveOtherChr <- function(dat, spec, fname){
+	#spec <- 1
+	#dat <- cgmrls[[1]]
+	lenR2 <- length(dat[[spec]]$LDmat)
+	cols <- c("#c7485a", "#237fa9", "#4a921e")
+	c1 <- c(rep('x', lenR2), rep('y', lenR2), rep('z', lenR2))
+	c2 <- log(c(dat[[spec]]$SSothers, dat[[spec]]$SNothers, dat[[spec]]$NNothers))
+	dfdat <- data.frame(sites= c1, logR2= c2)	#bind(c1, c2), colnames= c('c1', 'c2'))
+
+	myplot <- ggplot(dfdat, aes(logR2, colour=sites)) + coord_cartesian(xlim= c(-8, 0), ylim= c(0, 0.54)) + geom_density(alpha= 0.2, show.legend= F, adjust= 1, size= 1.1) + theme_minimal(base_size= 20) + scale_color_manual(values= c(x= cols[1], y= cols[2], z= cols[3]))
+	#
+	#myplot <- ggplot(dfcgmr2, aes(y, colour= x)) + coord_cartesian(xlim= c(-10, 0)) + geom_density(alpha= 0.2, show.legend= F, adjust= 1) + theme_minimal() + scale_color_manual(values= c(x= 'red', y= 'blue', z= 'cyan'))
+	ggsave(myplot, filename= fname, width= 7, height= 7)
+}
+
+
+
+
 getQrDistIXsn <- function(chrls, pQls, pops, bPosls, tChr = 2, subN= 5000){
 	## get r^2 values of mean genotypes  and their respective distances for outliers (s) and neutral sites (n) between the two given taxa
 	## NOTE: only for the s, n, and s-n within the given chromosome (tChr)
