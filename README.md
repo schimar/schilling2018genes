@@ -6,5 +6,5 @@ This repository contains the code used for downstream analyses of forward-time s
 * hts/		scripts for filtering of *Heliconius* resequencing data and estimation of mean genotypes
 * heliconius/	R code for figures and calculations of correlation coefficients between pairs of loci for different types of loci 
 
-
+For both sims and heliconius folders, there's a file containing the functions used, and a script file.
 
