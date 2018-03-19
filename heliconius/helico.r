@@ -262,6 +262,6 @@ fstQldls <- list(cgmrls, pamrls, cgpals)
 names(fstQldls) <- c('cgmr', 'pamr', 'cgpa')
 
 # for plotting, you can simply run the above functions (plotDensCurve and plotDensCurveOtherChr) for the fst set (fstQldls)
-
+#	(similarly, to get the summary stats for the Fst set, run the getQrStats functions with fstQLdls)
 
 
