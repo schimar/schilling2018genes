@@ -203,6 +203,65 @@ ggsave(myplot, filename= 'dc_nSets.pdf', width= 7, height= 7)
 
 # Fst correlation coefficients (supplement)
 
+# Fst estimates from genotype likelihoods (pls)
+fstGL <- list()
+for(i in 1:length(pls)){
+	fstGL[[i]] <- list()
+	pairs <- list(c(1,2), c(2,3), c(1,3))
+	for(j in 1:3){
+		obj <- pls[[i]][, pairs[[j]]]
+		pbar <- apply(obj, 1, mean)
+		pvar <- apply(obj, 1, var)
+		fst <- pvar/pbar		#(pbar * (1 - pbar))
+								#fst[which(fst > 1)] <- 1
+		fstGL[[i]][[j]] <- fst
+	}
+	names(fstGL[[i]]) <- c('cgal_mros', 'pach_mros', 'cgal_pach')
+}
+
+# get the 99th quantile
+
+fstGLqls <- list()
+for(i in 1:length(fstGL)){
+	fstGLqls[[i]] <- getFstGLquant(fstGL[[i]], 0.99)
+}
+
+
+# run correlation analyses for each chromosome and species pair (i.e. 15 runs)
+
+
+cgmr2 <- getQr_allChrSub(chrls= chrl, pQls= fstGLqls, tChr= 2, pops= c('cgal', 'mros'))
+cgmr7 <- getQr_allChrSub(chrls= chrl, pQls= fstGLqls, tChr= 7, pops= c('cgal', 'mros'))
+cgmr10 <- getQr_allChrSub(chrls= chrl, pQls= fstGLqls, tChr= 10, pops= c('cgal', 'mros'))
+cgmr18 <- getQr_allChrSub(chrls= chrl, pQls= fstGLqls, tChr= 18, pops= c('cgal', 'mros'))
+cgmr21 <- getQr_allChrSub(chrls= chrl, pQls= fstGLqls, tChr= 21, pops= c('cgal', 'mros'))
+
+cgmrls <- list(cgmr2, cgmr7, cgmr10, cgmr18, cgmr21)
+names(cgmrls) <- chromnames
+
+pamr2 <- getQr_allChrSub(chrls= chrl, pQls= fstGLqls, tChr= 2, pops= c('pach', 'mros'))
+pamr7 <- getQr_allChrSub(chrls= chrl, pQls= fstGLqls, tChr= 7, pops= c('pach', 'mros'))
+pamr10 <- getQr_allChrSub(chrls= chrl, pQls= fstGLqls, tChr= 10, pops= c('pach', 'mros'))
+pamr18 <- getQr_allChrSub(chrls= chrl, pQls= fstGLqls, tChr= 18, pops= c('pach', 'mros'))
+pamr21 <- getQr_allChrSub(chrls= chrl, pQls= fstGLqls, tChr= 21, pops= c('pach', 'mros'))
+
+pamrls <- list(pamr2, pamr7, pamr10, pamr18, pamr21) 
+names(pamrls) <- chromnames
+
+cgpa2 <- getQr_allChrSub(chrls= chrl, pQls= fstGLqls, tChr= 2, pops= c('cgal', 'pach'))
+cgpa7 <- getQr_allChrSub(chrls= chrl, pQls= fstGLqls, tChr= 7, pops= c('cgal', 'pach'))
+cgpa10 <- getQr_allChrSub(chrls= chrl, pQls= fstGLqls, tChr= 10, pops= c('cgal', 'pach'))
+cgpa18 <- getQr_allChrSub(chrls= chrl, pQls= fstGLqls, tChr= 18, pops= c('cgal', 'pach'))
+cgpa21 <- getQr_allChrSub(chrls= chrl, pQls= fstGLqls, tChr= 21, pops= c('cgal', 'pach'))
+
+
+cgpals <- list(cgpa2, cgpa7, cgpa10, cgpa18, cgpa21)
+names(cgpals) <- chromnames
+
+fstQldls <- list(cgmrls, pamrls, cgpals)
+names(fstQldls) <- c('cgmr', 'pamr', 'cgpa')
+
+# for plotting, you can simply run the above functions (plotDensCurve and plotDensCurveOtherChr) for the fst set (fstQldls)
 
 
 
