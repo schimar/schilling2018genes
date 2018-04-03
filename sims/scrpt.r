@@ -82,7 +82,7 @@ box()
 plot(log10(sAfst[[1]]$thetaMeanS), type= 'l', ylab= expression(paste('log'[10], ' metric')), cex.lab= 1.8, cex.axis= 1.4, lwd= 2, xlab= xLab, ylim= c(-2.5, 4))
 lines(log10(sAfst[[1]]$sStarLeS$Le), lwd= 2, lty= 2)
 
-legend('topleft', legend= c(expression(paste(phi)), expression('L'[e])), lty= c(1,2,1,3), cex= 2)
+legend('topleft', legend= c(expression(paste(theta)), expression('L'[e])), lty= c(1,2,1,3), cex= 2)
 
 #lines(log10(sAfst[[1]]$effMig[,2]), col= cols[3], lwd= 2)
 #lines(log10(sAfst[[1]]$maxEffMigSbar), col= cols[3], lwd= 2.2, lty= 3)
@@ -111,9 +111,9 @@ fitlsTheta <- list()
 # simply run this for all psls[[1:6]] and change the list integer respectively (here and below where it's written to fitlsTheta)
 	ps <- psls[[1]]
 	
-	theta <- unlist(lapply(ps, '[[', 2))
-	deltaPn <- unlist(lapply(ps, '[[', 4))
-	deltaPs <- unlist(lapply(ps, '[[', 3))
+	theta <- unlist(lapply(ps, '[[', 7))
+	deltaPn <- unlist(lapply(ps, '[[', 2))
+	deltaPs <- unlist(lapply(ps, '[[', 1))
 	
 	x <- as.numeric(log10(theta))
 	ys <- as.numeric(deltaPs)
@@ -145,14 +145,14 @@ par(mfrow= c(2,3))
 for(i in 1:length(psls)){
 	plot(1:10, type= 'n', xlim= c(-2, 0.75), ylim= c(0, 1), cex.lab= 1.8, xlab= expression(paste('log'[10], ' ', theta)), ylab= expression(paste(bar(p)[2], '- ', bar(p)[1])), cex.axis= 1.4)
 	thetas <- psls[[i]]
-	for(j in length(phis)){
-	theta <- unlist(lapply(phis, '[[', 2))
-	deltaPs <- as.numeric(unlist(lapply(phis, '[[', 3)))
-	deltaPn <- as.numeric(unlist(lapply(phis, '[[', 4)))
+	for(j in length(thetas)){
+	theta <- unlist(lapply(thetas, '[[', 7))
+	deltaPs <- as.numeric(unlist(lapply(thetas, '[[', 1)))
+	deltaPn <- as.numeric(unlist(lapply(thetas, '[[', 2)))
 
 
-		points(log10(phis[[j]]$theta_sBar), phis[[j]]$afDiffS, col= cols[1], pch= 20, cex= 1.3)
-		points(log10(phis[[j]]$theta_sBar), phis[[j]]$afDiffN, col= cols[2], pch= 20)
+		points(log10(thetas[[j]]$thetaMeanS), thetas[[j]]$afDiffS, col= cols[1], pch= 20, cex= 1.3)
+		points(log10(thetas[[j]]$thetaMeanS), thetas[[j]]$afDiffN, col= cols[2], pch= 20)
 		abline(v= sTimeHighestSlope[i], col= 'grey60', lwd= 1.3)
 		abline(v= nTimeHighestSlope[i], col= 'grey60', lwd= 1.3)
 	}
