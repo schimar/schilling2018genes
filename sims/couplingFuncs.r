@@ -96,13 +96,6 @@ calcGWCtime <- function(em, maxEffMig, endAllopatry){
 }
 
 
-geomean = function(x, na.rm=TRUE){
-	# function to calculate the geometric mean of vector x
-	exp(sum(log(x[x > 0]), na.rm=na.rm) / length(x))
-}
-
-
-
 calcMeanS <- function(sSel, gen, mutDist, sConst) { 
 	# calculate mean s for each generation in a given run
 	if (mutDist == 3) {      # constant s
@@ -110,11 +103,10 @@ calcMeanS <- function(sSel, gen, mutDist, sConst) {
 		return(meanS)
 	}
 	else {
-		meanS <- lapply(sSel, mean)		# geomean
+		meanS <- lapply(sSel, mean)		
 		return(unlist(meanS))
 	}
 }
-
 
 
 readCCobj <- function(run, path = '.', ...) {
@@ -161,9 +153,16 @@ ccStats.3 <- function(run, df, ccObj, maf= 25e-4, nChrom= 4) {    #fst, afts, LD
 	gen <- length(aftsSpl)
 	fstSplS <- lapply(fstSpl, subset, locType == 1)
 	aftsSplS <- lapply(aftsSpl, subset, locType == 1)
+	pDeme0 <- lapply(aftsSplS, '[[', 3)
+	pDeme1 <- lapply(aftsSplS, '[[', 4)
+	pDemeFavored <- list()
+	for(i in 1:length(pDeme0)){
+		pDemeFavored[[i]] <- do.call(pmax, list(pDeme0[[i]], pDeme1[[i]]))
+	}
 	nLociS <- as.numeric(unlist(lapply(fstSplS, nrow)))
-	p <- lapply(fstSplS, '[[', 4)
+	#p <- lapply(fstSplS, '[[', 4)
 	sSel <- lapply(fstSplS, '[[', 6)
+	pBar <- as.numeric(lapply(pDemeFavored, mean))
 	# 
 	sConst <- params$deme0_constant_s
 	mutDist <- params$mutation_distribution
@@ -191,10 +190,10 @@ ccStats.3 <- function(run, df, ccObj, maf= 25e-4, nChrom= 4) {    #fst, afts, LD
 	cWsBar <- unlist(lapply(sBarlist, '[[', 2))
 	
 	# equilibrium freq & cline width for all sSel
-	clineWidthAllS <- lapply(sSel, singleLocusEq, m= m, singleS= F)
-	pBarAllS <- lapply(lapply(clineWidthAllS, '[[', 1), unlist)
-	pBar <- unlist(lapply(pBarAllS, mean))
-	clineWallS <- lapply(lapply(clineWidthAllS, '[[', 2), unlist)
+	#clineWidthAllS <- lapply(sSel, singleLocusEq, m= m, singleS= F)
+	#pBarAllS <- lapply(lapply(clineWidthAllS, '[[', 1), unlist)
+	#pBar <- unlist(lapply(pBarAllS, mean))
+	#clineWallS <- lapply(lapply(clineWidthAllS, '[[', 2), unlist)
 
 	# get Fst values (s, n & total) per generation
 	fstSel <- unlist(lapply(lapply(lapply(fstSpl, function(x)x[x$locType == 1,]), '[[', 3), mean))
@@ -214,8 +213,8 @@ ccStats.3 <- function(run, df, ccObj, maf= 25e-4, nChrom= 4) {    #fst, afts, LD
 	maxEffMigMeanS <- calcMaxEffMig(meanS, m, unlist(lapply(fstSpl, length)))[[2]]
 	gwcTimeMeanS <- calcGWCtime(effMig, maxEffMigMeanS, params$end_period_allopatry)
 ##### output
-	out <- list(FSTs, LDsell, LDneutl, afDiff_s, afDiff_n, avgAFdiff, pHatsBar, cWsBar, meanS, sStarLeS, m, effMig, unlist(maxEffMigMeanS), gwcTimeMeanS, clineWallS, pBarAllS, nLoci, maf, recomb, PHIs$kphiMeanS, PHIs$thetaMeanS)
-	names(out) <- c('FSTs', 'LDsel', 'LDneut', 'afDiffS', 'afDiffN', 'avgAFdiffs', 'pHatsBar', 'cWsBar', 'meanS', 'sStarLeS', 'sd_move', 'effMig', 'maxEffMigMeanS', 'gwcTimeMeanS', 'cWallS', 'pBarAllS', 'nLoci', 'maf', 'recomb', 'kphiMeanS', 'thetaMeanS')
+	out <- list(FSTs, LDsell, LDneutl, afDiff_s, afDiff_n, avgAFdiff, pHatsBar, cWsBar, meanS, sStarLeS, m, effMig, unlist(maxEffMigMeanS), gwcTimeMeanS, nLoci, maf, recomb, PHIs$kphiMeanS, PHIs$thetaMeanS, pDemeFavored)
+	names(out) <- c('FSTs', 'LDsel', 'LDneut', 'afDiffS', 'afDiffN', 'avgAFdiffs', 'pHatsBar', 'cWsBar', 'meanS', 'sStarLeS', 'sd_move', 'effMig', 'maxEffMigMeanS', 'gwcTimeMeanS', 'nLoci', 'maf', 'recomb', 'kphiMeanS', 'thetaMeanS', 'pDf')
 	return(out)
 }
 

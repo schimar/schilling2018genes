@@ -79,7 +79,7 @@ box()
 #
 ## figure 1 C
 
-plot(log10(sAfst[[1]]$thetaMeanS), type= 'l', ylab= expression(paste('log'[10], ' metric')), cex.lab= 1.8, cex.axis= 1.4, lwd= 2, xlab= xLab, ylim= c(-2, 5))
+plot(log10(sAfst[[1]]$thetaMeanS), type= 'l', ylab= expression(paste('log'[10], ' metric')), cex.lab= 1.8, cex.axis= 1.4, lwd= 2, xlab= xLab, ylim= c(-2.5, 4))
 lines(log10(sAfst[[1]]$sStarLeS$Le), lwd= 2, lty= 2)
 
 legend('topleft', legend= c(expression(paste(phi)), expression('L'[e])), lty= c(1,2,1,3), cex= 2)
@@ -91,7 +91,7 @@ legend('topleft', legend= c(expression(paste(phi)), expression('L'[e])), lty= c(
 ############
 # get thetas and phis for each respective set (A - F)
 
-psA <- xtractPhis(sAsym[1,], maf= 0.025)
+psA <- xtractPhis(sAsym, maf= 0.025)
 psB <- xtractPhis(sBsym, maf= 0.025)
 psC <- xtractPhis(sCsym, maf= 0.025)
 ##
