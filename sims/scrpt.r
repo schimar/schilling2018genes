@@ -38,8 +38,8 @@ sFsym <- sF[which(sF$end_period_allopatry == -1),]
 # get Fst for set A (figure 1 B)
 
 
-sAfst <- xtractFst(sAsym)
-fobj <- sAfst
+sAfst <- xtractFst(sAsym[1,])
+fobj <- sAfst[[1]]
 
 sels <- list()
 neuts <- list()
@@ -75,8 +75,9 @@ lines(sMed, lty= 1, cex= 1.2, col= cols[1], lwd= 2.0)
 lines(nMed, lty= 1, cex= 1.2, col= cols[2], lwd= 2.0)
 
 box()
-###
 
+#
+## figure 1 C
 
 plot(log10(sAfst[[1]]$thetaMeanS), type= 'l', ylab= expression(paste('log'[10], ' metric')), cex.lab= 1.8, cex.axis= 1.4, lwd= 2, xlab= xLab, ylim= c(-2, 5))
 lines(log10(sAfst[[1]]$sStarLeS$Le), lwd= 2, lty= 2)
@@ -90,7 +91,7 @@ legend('topleft', legend= c(expression(paste(phi)), expression('L'[e])), lty= c(
 ############
 # get thetas and phis for each respective set (A - F)
 
-psA <- xtractPhis(sAsym, maf= 0.025)
+psA <- xtractPhis(sAsym[1,], maf= 0.025)
 psB <- xtractPhis(sBsym, maf= 0.025)
 psC <- xtractPhis(sCsym, maf= 0.025)
 ##

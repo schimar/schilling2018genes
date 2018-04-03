@@ -110,7 +110,7 @@ calcMeanS <- function(sSel, gen, mutDist, sConst) {
 		return(meanS)
 	}
 	else {
-		meanS <- lapply(sSel, geomean)
+		meanS <- lapply(sSel, mean)		# geomean
 		return(unlist(meanS))
 	}
 }
@@ -203,23 +203,19 @@ ccStats.3 <- function(run, df, ccObj, maf= 25e-4, nChrom= 4) {    #fst, afts, LD
 	FSTs <- as.data.frame(cbind(fstSel, fstNeut, fstAll))
 	names(FSTs) <- c('FSTsel', 'FSTneut', 'FSTtot')
 	# get effective s and Le   
-	sSLe <- calcLe(m, pBar, PHIs$sBar)
+	sSLe <- calcLe(m, pBar, meanS)
 	sStarLeS <- as.data.frame(do.call(cbind, sSLe))
 	names(sStarLeS) <- c('sStar', 'Le', 's', 'pBar')
 		# 
 	LDsell <- LDsel[, c(1,4)]
 	LDneutl <- LDneut[, c(1,4)]
 	#FSTout <- as.data.frame(matrix(unlist(FSTs),ncol=3, byrow=TRUE, dimnames= list(NULL, c('FSTneut', 'FSTsel', 'FSTtot'))))
-	######sStLeS <- do.call('rbind', sStLeS)
-	# maxEffMig with sBar (phi/ (L * r))
-	maxEffMigSbar <- calcMaxEffMig(PHIs$sBar, m, unlist(lapply(fstSpl, length)))[[2]]
-	gwcTimeSbar <- calcGWCtime(effMig, maxEffMigSbar, params$end_period_allopatry)
-	# maxEffMig with meanS (geomean of sMax[i])
+	# maxEffMig with meanS (mean of sMax[i])
 	maxEffMigMeanS <- calcMaxEffMig(meanS, m, unlist(lapply(fstSpl, length)))[[2]]
 	gwcTimeMeanS <- calcGWCtime(effMig, maxEffMigMeanS, params$end_period_allopatry)
 ##### output
-	out <- list(FSTs, LDsell, LDneutl, afDiff_s, afDiff_n, avgAFdiff, pHatsBar, cWsBar, meanS, sStarLeS, m, effMig, unlist(maxEffMigSbar), gwcTimeSbar, unlist(maxEffMigMeanS), gwcTimeMeanS, clineWallS, pBarAllS, nLoci, maf, recomb, PHIs$kphiMeanS, PHIs$thetaMeanS)
-	names(out) <- c('FSTs', 'LDsel', 'LDneut', 'afDiffS', 'afDiffN', 'avgAFdiffs', 'pHatsBar', 'cWsBar', 'meanS', 'sStarLeS', 'sd_move', 'effMig', 'maxEffMigSbar', 'gwcTimeSbar', 'maxEffMigMeanS', 'gwcTimeMeanS', 'cWallS', 'pBarAllS', 'nLoci', 'maf', 'recomb', 'kphiMeanS', 'thetaMeanS')
+	out <- list(FSTs, LDsell, LDneutl, afDiff_s, afDiff_n, avgAFdiff, pHatsBar, cWsBar, meanS, sStarLeS, m, effMig, unlist(maxEffMigMeanS), gwcTimeMeanS, clineWallS, pBarAllS, nLoci, maf, recomb, PHIs$kphiMeanS, PHIs$thetaMeanS)
+	names(out) <- c('FSTs', 'LDsel', 'LDneut', 'afDiffS', 'afDiffN', 'avgAFdiffs', 'pHatsBar', 'cWsBar', 'meanS', 'sStarLeS', 'sd_move', 'effMig', 'maxEffMigMeanS', 'gwcTimeMeanS', 'cWallS', 'pBarAllS', 'nLoci', 'maf', 'recomb', 'kphiMeanS', 'thetaMeanS')
 	return(out)
 }
 
@@ -372,18 +368,15 @@ calcPHIs.3 <- function(aftsSpl, fstSpl, maf= 25e-4, mapL= 100, nChrom= 4, meanS=
 	kphiSmax <- ((unlist(nLociS) - 1) * (sMax / recomb))
 	#
 	kphiMeanS <- ((unlist(nLociS) -1) * (meanS / recomb))
-	# phiObs & sBar
-	phiObs <- unlist(lapply(sSel, sum)) / recomb
-	sBar <- (phiObs / unlist(nLociS)) * recomb
 
-	# Barton's phi w/ meanS
+	# Barton's theta w/ meanS
 	thetaMeanS <- meanS / recomb
 	# Barton's phi w/ sMax
 	phiBarsMax <- sMax / recomb
 
 	#
-	out <- list(sMax, kphiMeanS, kphiSmax, phiObs, sBar, nLociS, nLoci, recomb, thetaMeanS, phiBarsMax)
-	names(out) <- c('sMax', 'kphiMeans', 'kphiSmax', 'phiObs', 'sBar', 'nLociS', 'nLoci', 'recomb', 'thetaMeanS', 'phiBarsMax')
+	out <- list(sMax, kphiMeanS, kphiSmax, nLociS, nLoci, recomb, thetaMeanS, phiBarsMax)
+	names(out) <- c('sMax', 'kphiMeans', 'kphiSmax', 'nLociS', 'nLoci', 'recomb', 'thetaMeanS', 'phiBarsMax')
 	return(out)
 }
 
