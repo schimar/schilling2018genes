@@ -270,4 +270,32 @@ for(i in 1:length(ldls)){
 dev.off()
 
 
+#########################################################################
+# read G, H, and I runs 	v. 3.7.1
+# 		(61:80, 201:230 = G; 41:60, 231:260 = H; 21:40, 261:290 = I) 
+
+
+# change readCCobj for v371
+
+dfGHI <- read.table("~/flaxmans/bu2s/runs/v371/genes/GHI/v371paramsGHI.txt", header= T, sep= '\t')
+names(dfGHI) <- tolower(names(dfGHI))
+#
+sG <- dfGHI[which(dfGHI$mutation_distribution == 0 & dfGHI$sd_move == 0.00002 & dfGHI$mean_s == 0.02),]
+sG <- sG[c(1:30, 32:51),]
+sH <- dfGHI[which(dfGHI$mutation_distribution == 0 & dfGHI$sd_move == 0.0001 & dfGHI$mean_s == 0.02),]
+sI <- dfGHI[which(dfGHI$mutation_distribution == 0 & dfGHI$sd_move == 0.0002 & dfGHI$mean_s == 0.02),]
+#
+
+psG <- xtractPhis(sG, maf= 0.025)
+psH <- xtractPhis(sH, maf= 0.025)
+psI <- xtractPhis(sI, maf= 0.025)
+
+psls <- list(psA, psB, psC, psD, psE, psF)
+
+
+
+
+
+
+
 

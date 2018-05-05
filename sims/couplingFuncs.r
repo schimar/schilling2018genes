@@ -135,6 +135,31 @@ readCCobj <- function(run, path = '.', ...) {
 	return(out)
 }
 
+readCCobjV371 <- function(run, path = '.', ...) {
+	# function to read a single data set (as input for ccStats)
+	path5 <- paste('/runs/', run, sep= '')
+	fstTmp <- as.data.frame(h5read(paste(path, '/fst_GIt.h5', sep= ''), name= path5)[[1]])
+	H5close()
+	aftsTmp <- as.data.frame(h5read(paste(path, '/afts_GIt.h5', sep= ''), name= path5)[[1]])
+	colnames(fstTmp) <- c("nGen", "locusID", "Fst", "allele_frequencies", "S_MAX1", "S_MAX0", "chromosomeMembership", "MAP", "locType")
+	colnames(aftsTmp) <- c("nGen", "locusID", "AFpatch0", "AFpatch1", "is_reversed_locus", "locType", "AF", "AFdiff")
+	H5close()
+	#
+	LDselTmp <- h5read(paste(path, '/LDselSame_GIt.h5', sep= ''), name= path5)[[1]]
+	H5close()
+	LDneuTmp <- h5read(paste(path, '/LDneutSame_GIt.h5', sep= ''), name= path5)[[1]]
+	H5close()
+	effMig <- h5read(paste(path, '/effMig_GIt.h5', sep= ''), name= path5)[[1]]
+	colnames(effMig) <- c("nGen", "eme0", "eme1", "nVariableLoci", "nRes", "nImm", paste('V', seq(7, 26,1)))
+	H5close()
+	#dXY <- h5read(paste(path, '/dXY_AFt.h5', sep= ''), name= path5)[[1]]
+	#colnames(dXY) <- c('nGen', 'dXY', 'deme0', 'deme1')
+	H5close()
+	#
+	out <- list(fstTmp, aftsTmp, LDselTmp, LDneuTmp, effMig)	#, dXY)
+	names(out) <- c('fst', 'afts', 'LDsel', 'LDneut', 'effMig')	#, 'dXY')
+	return(out)
+}
 
 
 ccStats.3 <- function(run, df, ccObj, maf= 25e-4, nChrom= 4) {    #fst, afts, LDsel, LDneut, effMig, run, maf= 25e-4, nChrom= 4) {
