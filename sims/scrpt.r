@@ -275,7 +275,6 @@ dev.off()
 # 		(61:80, 201:230 = G; 41:60, 231:260 = H; 21:40, 261:290 = I) 
 
 
-# change readCCobj for v371
 
 dfGHI <- read.table("~/flaxmans/bu2s/runs/v371/genes/GHI/v371paramsGHI.txt", header= T, sep= '\t')
 names(dfGHI) <- tolower(names(dfGHI))
@@ -286,11 +285,201 @@ sH <- dfGHI[which(dfGHI$mutation_distribution == 0 & dfGHI$sd_move == 0.0001 & d
 sI <- dfGHI[which(dfGHI$mutation_distribution == 0 & dfGHI$sd_move == 0.0002 & dfGHI$mean_s == 0.02),]
 #
 
-psG <- xtractPhis(sG, maf= 0.025)
-psH <- xtractPhis(sH, maf= 0.025)
-psI <- xtractPhis(sI, maf= 0.025)
+psG <- xtractPhisV371(sG, path= '~/flaxmans/bu2s/runs/v371/genes/GHI/', maf= 0.025)
+psH <- xtractPhisV371(sH, path= '~/flaxmans/bu2s/runs/v371/genes/GHI/', maf= 0.025)
+psI <- xtractPhisV371(sI, path= '~/flaxmans/bu2s/runs/v371/genes/GHI/', maf= 0.025)
 
-psls <- list(psA, psB, psC, psD, psE, psF)
+psls <- list(psG, psH, psI)
+
+
+fitlsTheta <- list()
+
+# simply run this for all psls[[1:6]] and change the list integer respectively (here and below where it's written to fitlsTheta)
+	ps <- psls[[3]]
+	
+	theta <- unlist(lapply(ps, '[[', 7))
+	deltaPn <- unlist(lapply(ps, '[[', 2))
+	deltaPs <- unlist(lapply(ps, '[[', 1))
+	
+	x <- as.numeric(log10(theta))
+	ys <- as.numeric(deltaPs)
+	yn <- as.numeric(deltaPn)
+	
+	fitS <- nls(ys~1/(1 + exp(-a * (x-b))), start= list(a= 3, b= -0.5), na.action= na.omit)
+	
+	#fitN <- nls(yn~1/(1 + exp(-a * (x-b))), start= list(a= 1, b= 2), na.action= na.omit)
+	fitN <- nls(yn~1/(1 + exp(-a * (x-b))), start= list(a= 2, b= 0.5), na.action= na.omit)
+
+	fitlsTheta[[3]] <- list(fitS, fitN)
+##}
+
+
+	parS <- coef(fitS)
+	parN <- coef(fitN)
+	
+	#ys2 <- sigmoid(parS, x)
+	#yn2 <- sigmoid(parN, x)
+
+sTimeHighestSlope <- c(-1.048, -1.0429, -1.058445)
+nTimeHighestSlope <- c(0.6911, 0.6785, 0.692969)
+#
+
+# figure 4
+pdf('thetaGHI.pdf', width= 16, height= 4.5)
+par(mfrow= c(1,3))
+
+for(i in 1:length(psls)){
+	plot(1:10, type= 'n', xlim= c(-2, 0.75), ylim= c(0, 1), cex.lab= 1.8, xlab= expression(paste('log'[10], ' ', theta)), ylab= expression(paste(bar(p)[2], '- ', bar(p)[1])), cex.axis= 1.4)
+	thetas <- psls[[i]]
+	for(j in length(thetas)){
+	theta <- unlist(lapply(thetas, '[[', 7))
+	deltaPs <- as.numeric(unlist(lapply(thetas, '[[', 1)))
+	deltaPn <- as.numeric(unlist(lapply(thetas, '[[', 2)))
+
+
+		points(log10(thetas[[j]]$thetaMeanS), thetas[[j]]$afDiffS, col= cols[1], pch= 20, cex= 1.3)
+		points(log10(thetas[[j]]$thetaMeanS), thetas[[j]]$afDiffN, col= cols[2], pch= 20)
+		abline(v= sTimeHighestSlope[i], col= 'grey60', lwd= 1.3)
+		abline(v= nTimeHighestSlope[i], col= 'grey60', lwd= 1.3)
+	}
+}
+dev.off()
+
+# average LD  - change functions (V371) xtractLD, etc.
+
+# get LD for each respective set (A - F)
+
+# we use the psls here, instead of ldls
+#ldsG <- xtractLDv371(sG, path= '~/flaxmans/bu2s/runs/v371/genes/GHI/', maf= 0.025)
+#ldsH <- xtractLDv371(sH, path= '~/flaxmans/bu2s/runs/v371/genes/GHI/', maf= 0.025)
+#ldsI <- xtractLDv371(sI, path= '~/flaxmans/bu2s/runs/v371/genes/GHI/', maf= 0.025)
+
+#ldls <- list(ldsA, ldsB, ldsC)
+
+#	nonlinear least squares fit of LD
+
+lds <- list()
+ldn <- list()
+for(i in 1:length(psls)){
+	ldObj <- psls[[i]]
+	ldsels <- list()
+	ldneuts <- list()
+	for(j in 1:length(ldObj)){
+		ldsels[[j]] <- ldObj[[j]]$LDsel[,2]
+		ldneuts[[j]] <- ldObj[[j]]$LDneut[,2]
+	}
+	
+	ldDFs <- as.data.frame(ldsels)
+	ldDFs <- t(ldDFs)
+	ldDFn <- as.data.frame(ldneuts)
+	ldDFn <- t(ldDFn)
+	
+	sMed <- apply(ldDFs, 1, median, na.rm= T)
+	nMed <- apply(ldDFn, 1, median, na.rm= T)
+	lds[[i]] <- as.numeric(sMed) 
+	ldn[[i]] <- as.numeric(nMed)
+}
+
+# can either be run with a loop across all six sets or individually (which might be better for starting values for each set)
+fitld <- list()
+#for(i in 1:length(lds)){
+
+# simply run this for all psls[[1:6]]
+	ys <- lds[[3]]
+	yn <- ldn[[3]]
+	x <- 1:length(ys)
+	
+	fitS <- nls(ys~z/(1 + exp(-a * (x-b))), start= list(z= 1, a= 2, b= 10), na.action= na.omit)
+	fitN <- nls(yn~z/(1 + exp(-a * (x-b))), start= list(z= 1, a= 0.5, b= 30), na.action= na.omit)
+	fitld[[3]] <- list(fitS, fitN)
+#}
+
+
+ldsHighSlope <- c(3.6779, 3.6146, 3.3015) # b 
+ldnHighSlope <- c(35.1148, 26.5898, 21.025)
+
+
+
+tsFreq <- rep(1000, 3)
+
+pdf('~/flaxmans/bu2s/runs/v371/genes/figs/LDblack_ablne.pdf', width= 16, height= 4.5)
+
+par(mfrow= c(1,3))	#, mar= c(5,4,4,8) + 0.1)
+
+for(i in 1:length(psls)){
+	ldObj <- psls[[i]]
+	ldsels <- list()
+	ldneuts <- list()
+	for(j in 1:length(ldObj)){
+		ldsels[[j]] <- ldObj[[j]]$LDsel[,2]
+		ldneuts[[j]] <- ldObj[[j]]$LDneut[,2]
+	}
+	
+	ldDFs <- as.data.frame(ldsels)
+	ldDFs <- t(ldDFs)
+	ldDFn <- as.data.frame(ldneuts)
+	ldDFn <- t(ldDFn)
+	
+	sMed <- apply(ldDFs, 1, median, na.rm= T)
+	nMed <- apply(ldDFn, 1, median, na.rm= T)
+	qUps <- apply(ldDFs, 1, quantile, prob= 0.95, type= 8, na.rm= T)
+	qUpn <- apply(ldDFn, 1, quantile, prob= 0.95, type= 8, na.rm= T)
+	qLos <- apply(ldDFs, 1, quantile, prob= 0.05, type= 8, na.rm= T)
+	qLon <- apply(ldDFn, 1, quantile, prob= 0.05, type= 8, na.rm= T)
+	xaxs <- list(c(0, 20, 40, 60), c(0, 10, 20, 30, 40, 50), c(0, 10, 20, 30, 40))
+
+	xax  <- xaxs[[i]]*1000/tsFreq[i]	
+	xLab <- expression(paste("generations (x 10" ^"3)"))		#, tsFreq[i], ')')
+	#else{
+
+	#
+	plot(x= 1:length(sMed), type= 'n', cex.axis= 1.4, cex.lab= 1.8, xlab= xLab, ylab= 'LD', xlim= c(0, length(sMed)), ylim= c(0,1), axes= F)
+	abline(v= ldsHighSlope[i], col= 'grey70', lwd= 1.3)
+	abline(v= ldnHighSlope[i], col= 'grey70', lwd= 1.3)
+
+	axis(1, at= xax, labels= xaxs[[i]], cex.axis= 1.4)
+	axis(2, at= c(0, 0.5, 1.0), cex.axis= 1.4)
+
+	# nGen[i]/tsFreq[i]
+	lines(qUps, lty= 1, cex= 1.2, col= 'grey50')
+	lines(qLos, lty= 1, cex= 1.2, col= 'grey50')	#cols[1])
+	
+	lines(qUpn, lty= 1, cex= 1.2, col= 'grey50')	#cols[1])
+	lines(qLon, lty= 1, cex= 1.2, col= 'grey50')	#cols[1])
+	lines(sMed, lty= 1, cex= 1.2)	#, col= cols[1])
+	lines(nMed, lty= 1, cex= 1.2)	#, col= cols[2])
+	box()
+	}
+
+dev.off()
+
+
+################## 
+#  G, H, & I summary stats
+setwd('/home/schimar/flaxmans/bu2s/runs/v371/genes/GHI/')
+
+dat <- read.table('v371paramsGHI.txt', header= T, sep= '\t')
+names(dat) <- tolower(names(dat))
+
+datG <- dat[which(dat$sd_move == 0.00002 & dat$mean_s == 0.02),]
+datG <- datG[c(1:30, 32:51),]
+
+datH <- dat[which(dat$sd_move == 0.0001 & dat$mean_s == 0.02),]
+
+datI <- dat[which(dat$sd_move == 0.0002 & dat$mean_s == 0.02),]
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -145,22 +145,29 @@ readCCobjV371 <- function(run, path = '.', ...) {
 	colnames(aftsTmp) <- c("nGen", "locusID", "AFpatch0", "AFpatch1", "is_reversed_locus", "locType", "AF", "AFdiff")
 	H5close()
 	#
-	LDselTmp <- h5read(paste(path, '/LDselSame_GIt.h5', sep= ''), name= path5)[[1]]
+	LDselSameTmp <- as.data.frame(h5read(paste(path, '/LDselSame_GIt.h5', sep= ''), name= path5)[[1]])
 	H5close()
-	LDneuTmp <- h5read(paste(path, '/LDneutSame_GIt.h5', sep= ''), name= path5)[[1]]
+	colnames(LDselSameTmp) <- c("totalGenerationsElapsed", "avgDeme0", "avgDeme1", "globalAvg")
+	LDselDiffTmp <- as.data.frame(h5read(paste(path, '/LDselDiff_GIt.h5', sep= ''), name= path5)[[1]])
 	H5close()
-	effMig <- h5read(paste(path, '/effMig_GIt.h5', sep= ''), name= path5)[[1]]
-	colnames(effMig) <- c("nGen", "eme0", "eme1", "nVariableLoci", "nRes", "nImm", paste('V', seq(7, 26,1)))
+	colnames(LDselDiffTmp) <- c("totalGenerationsElapsed", "avgDeme0", "avgDeme1", "globalAvg")
+	LDneuSameTmp <- as.data.frame(h5read(paste(path, '/LDneutSame_GIt.h5', sep= ''), name= path5)[[1]])
+	colnames(LDneuSameTmp) <- c("totalGenerationsElapsed", "avgDeme0", "avgDeme1", "globalAvg")
+	H5close()
+	LDneuDiffTmp <- as.data.frame(h5read(paste(path, '/LDneutDiff_GIt.h5', sep= ''), name= path5)[[1]])
+	colnames(LDneuDiffTmp) <- c("totalGenerationsElapsed", "avgDeme0", "avgDeme1", "globalAvg")
+	H5close()
+	effMig <- as.data.frame(h5read(paste(path, '/effMig_GIt.h5', sep= ''), name= path5)[[1]])
+	colnames(effMig)[1:6] <- c("nGen", "eme0", "eme1", "nVariableLoci", "nRes", "nImm")#, paste('V', seq(7, 26,1)))
 	H5close()
 	#dXY <- h5read(paste(path, '/dXY_AFt.h5', sep= ''), name= path5)[[1]]
 	#colnames(dXY) <- c('nGen', 'dXY', 'deme0', 'deme1')
 	H5close()
 	#
-	out <- list(fstTmp, aftsTmp, LDselTmp, LDneuTmp, effMig)	#, dXY)
-	names(out) <- c('fst', 'afts', 'LDsel', 'LDneut', 'effMig')	#, 'dXY')
+	out <- list(fstTmp, aftsTmp, LDselSameTmp, LDselDiffTmp, LDneuSameTmp, LDneuDiffTmp, effMig)	#, dXY)
+	names(out) <- c('fst', 'afts', 'LDselSame', 'LDselDiff', 'LDneutSame', 'LDneutDiff', 'effMig')	#, 'dXY')
 	return(out)
 }
-
 
 ccStats.3 <- function(run, df, ccObj, maf= 25e-4, nChrom= 4) {    #fst, afts, LDsel, LDneut, effMig, run, maf= 25e-4, nChrom= 4) {
 	# function to calculate coupling/congealing stats for a given run 
@@ -170,6 +177,97 @@ ccStats.3 <- function(run, df, ccObj, maf= 25e-4, nChrom= 4) {    #fst, afts, LD
 	#LDsel <- as.data.frame(ccObj$LDsel)[ccObj$LDsel[,1] %in% names(ccObj$phiObs),]
 	LDneut <- ccObj$LDneut
 	effMig <- ccObj$effMig[,1:2]
+	params <- df[which(df$run == run),]
+	m = params$sd_move
+	fstSpl <- split(fst, fst$nGen)
+	aftsSpl <- split(afts, afts$nGen)
+	nLoci <- unlist(lapply(lapply(fstSpl, dim), '[', 1))
+	gen <- length(aftsSpl)
+	fstSplS <- lapply(fstSpl, subset, locType == 1)
+	aftsSplS <- lapply(aftsSpl, subset, locType == 1)
+	pDeme0 <- lapply(aftsSplS, '[[', 3)
+	pDeme1 <- lapply(aftsSplS, '[[', 4)
+	pDemeFavored <- list()
+	for(i in 1:length(pDeme0)){
+		pDemeFavored[[i]] <- do.call(pmax, list(pDeme0[[i]], pDeme1[[i]]))
+	}
+	nLociS <- as.numeric(unlist(lapply(fstSplS, nrow)))
+	#p <- lapply(fstSplS, '[[', 4)
+	sSel <- lapply(fstSplS, '[[', 6)
+	pBar <- as.numeric(lapply(pDemeFavored, mean))
+	# 
+	sConst <- params$deme0_constant_s
+	mutDist <- params$mutation_distribution
+	#
+	meanS <- calcMeanS(sSel, mutDist, gen, sConst)
+
+	# calc Kruuk's phi and phiObs 
+	PHIs <- calcPHIs.3(aftsSpl, fstSpl, maf= maf, mapL= params$total_map_length, nChrom= params$nchromosomes, meanS= meanS)     # NOTE: we use a MAF threshold here! 
+	#
+	nLoci <- as.data.frame(cbind(nLoci, nLociS, PHIs$nLoci, PHIs$nLociS))
+	colnames(nLoci) <- c('nLoci', 'nLociS', 'nLocimaf', 'nLociSmaf')
+	recomb <- PHIs$recomb
+	#  afDiffs
+	afDiff_s <- lapply(aftsSplS, '[[', 8)
+	afDiff_n <- lapply(lapply(aftsSpl, subset, locType == 0), '[[', 8)
+	avgAFdiff <- unlist(lapply(lapply(lapply(aftsSpl, '[[', 8), abs), mean))    # mean(abs(allAFdiffsPerGen))
+	#
+	# calc single locus exp. under full coupling (sMax) 
+	sMaxlist <- lapply(PHIs$sMax, singleLocusEq, m= m, singleS= T)
+	pHatsMax <- unlist(lapply(sMaxlist, '[[', 1))
+	cWsMax <- unlist(lapply(sMaxlist, '[[', 2))
+	# calc single locus exp. using actual selection coefficients (sSel == S_MAX0)
+	sBarlist <- lapply(lapply(PHIs$sBar, singleLocusEq, m= m, singleS= F), unlist)
+	pHatsBar <- unlist(lapply(sBarlist, '[[', 1))
+	cWsBar <- unlist(lapply(sBarlist, '[[', 2))
+	
+	# equilibrium freq & cline width for all sSel
+	#clineWidthAllS <- lapply(sSel, singleLocusEq, m= m, singleS= F)
+	#pBarAllS <- lapply(lapply(clineWidthAllS, '[[', 1), unlist)
+	#pBar <- unlist(lapply(pBarAllS, mean))
+	#clineWallS <- lapply(lapply(clineWidthAllS, '[[', 2), unlist)
+
+	# get Fst values (s, n & total) per generation
+	fstSel <- unlist(lapply(lapply(lapply(fstSpl, function(x)x[x$locType == 1,]), '[[', 3), mean))
+	fstNeut <- unlist(lapply(lapply(lapply(fstSpl, function(x)x[x$locType == 0,]), '[[', 3), mean))
+	fstAll <- unlist(lapply(lapply(fstSpl, '[[', 3), mean))
+	FSTs <- as.data.frame(cbind(fstSel, fstNeut, fstAll))
+	names(FSTs) <- c('FSTsel', 'FSTneut', 'FSTtot')
+	# get effective s and Le   
+	sSLe <- calcLe(m, pBar, meanS)
+	sStarLeS <- as.data.frame(do.call(cbind, sSLe))
+	names(sStarLeS) <- c('sStar', 'Le', 's', 'pBar')
+		# 
+	LDsell <- LDsel[, c(1,4)]
+	LDneutl <- LDneut[, c(1,4)]
+	#FSTout <- as.data.frame(matrix(unlist(FSTs),ncol=3, byrow=TRUE, dimnames= list(NULL, c('FSTneut', 'FSTsel', 'FSTtot'))))
+	# maxEffMig with meanS (mean of sMax[i])
+	maxEffMigMeanS <- calcMaxEffMig(meanS, m, unlist(lapply(fstSpl, length)))[[2]]
+	gwcTimeMeanS <- calcGWCtime(effMig, maxEffMigMeanS, params$end_period_allopatry)
+##### output
+	out <- list(FSTs, LDsell, LDneutl, afDiff_s, afDiff_n, avgAFdiff, pHatsBar, cWsBar, meanS, sStarLeS, m, effMig, unlist(maxEffMigMeanS), gwcTimeMeanS, nLoci, maf, recomb, PHIs$kphiMeanS, PHIs$thetaMeanS, pDemeFavored)
+	names(out) <- c('FSTs', 'LDsel', 'LDneut', 'afDiffS', 'afDiffN', 'avgAFdiffs', 'pHatsBar', 'cWsBar', 'meanS', 'sStarLeS', 'sd_move', 'effMig', 'maxEffMigMeanS', 'gwcTimeMeanS', 'nLoci', 'maf', 'recomb', 'kphiMeanS', 'thetaMeanS', 'pDf')
+	return(out)
+}
+
+ccStats.3V371 <- function(run, df, ccObj, maf= 25e-4, nChrom= 4) {    #fst, afts, LDsel, LDneut, effMig, run, maf= 25e-4, nChrom= 4) {
+	# function to calculate coupling/congealing stats for a given run 
+	fst <- ccObj$fst
+	afts <- ccObj$afts
+	LDselSame <- ccObj$LDselSame #emRed <- em[em$nGen %in% unique(fst$nGen),]
+	LDselDiff <- ccObj$LDselDiff
+	#LDsel <- as.data.frame(ccObj$LDsel)[ccObj$LDsel[,1] %in% names(ccObj$phiObs),]
+	LDneutSame <- ccObj$LDneutSame
+	LDneutDiff <- ccObj$LDneutDiff
+	effMig <- ccObj$effMig[,1:2]
+	#
+	LDsel <- as.data.frame(cbind(LDselSame$totalGenerationsElapsed, LDselSame$globalAvg, LDselDiff$globalAvg))
+	LDneut <- as.data.frame(cbind(LDneutSame$totalGenerationsElapsed, LDneutSame$globalAvg, LDneutDiff$globalAvg))
+	LDsel[,4] <- rowMeans(LDsel[,2:3])
+	LDneut[,4] <- rowMeans(LDneut[,2:3])
+	colnames(LDsel) <- c("nGen", "sameChr", "diffChr", "total")
+	colnames(LDneut) <- c("nGen", "sameChr", "diffChr", "total")
+	##
 	params <- df[which(df$run == run),]
 	m = params$sd_move
 	fstSpl <- split(fst, fst$nGen)
@@ -414,7 +512,7 @@ xtractPhis <- function(data, folder= '.', path= '.', maf= 25e-4, ...) {
 		path5 <- paste('/runs/', run, sep= '')
 		#
 		ccObjTmp <- readCCobj(run, path)
-		ccTmp <- ccStats.3(run= run, df= df, ccObj= ccObjTmp, maf= maf)
+		ccTmp <- ccStats.3(run= run, df= data, ccObj= ccObjTmp, maf= maf)
 		#
 		avgAFdiffS <- unlist(lapply(lapply(ccTmp$afDiffS, abs), mean))
 		avgAFdiffN <- unlist(lapply(lapply(ccTmp$afDiffN, abs), mean))
@@ -431,6 +529,35 @@ xtractPhis <- function(data, folder= '.', path= '.', maf= 25e-4, ...) {
 	#names(out) <- c('phiObs', 'kphisMax')
 	return(runs)
 }		
+
+
+xtractPhisV371 <- function(data, folder= '.', path= '.', maf= 25e-4, ...) {
+	# function to read individual runs (from vector of runs), calculate CC and create new list (of length(data)) that contains phiObs and kphismax
+	#
+	runs <- list()
+	for (i in 1:dim(data)[1]){
+		run <- data$run[i]
+		path5 <- paste('/runs/', run, sep= '')
+		#
+		ccObjTmp <- readCCobjV371(run, path)
+		ccTmp <- ccStats.3V371(run= run, df= data, ccObj= ccObjTmp, maf= maf)
+		#
+		avgAFdiffS <- unlist(lapply(lapply(ccTmp$afDiffS, abs), mean))
+		avgAFdiffN <- unlist(lapply(lapply(ccTmp$afDiffN, abs), mean))
+		cWallS <- lapply(ccTmp$cWallS, unlist)
+		runs[[i]] <- list(avgAFdiffS, avgAFdiffN, cWallS, ccTmp$pBarAllS, ccTmp$sStarLeS$Le, ccTmp$kphiMeanS, ccTmp$thetaMeanS, ccTmp$LDsel, ccTmp$LDneut) 
+		names(runs)[i] <- run
+		names(runs[[i]]) <- c('afDiffS', 'afDiffN', 'cWallS', 'pBarAllS', 'Le', 'kphiMeanS', 'thetaMeanS', 'LDsel', 'LDneut')
+		#phiObs[[i]] <- ccTmp$phiObs
+		#names(phiObs)[i] <- run
+		#kphisMax[[i]] <- ccTmp$kphisMax
+		#names(kphisMax)[i] <- run
+	}
+	#out <- list(phiObs, kphisMax)
+	#names(out) <- c('phiObs', 'kphisMax')
+	return(runs)
+}		
+
 
 
 xtractLD <- function(data, setname, folder, path= '/media/schimar/FLAXMAN/h5/', maf= 25e-4, ...) {
